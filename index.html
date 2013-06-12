@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Canvas Animation</title>
+</head>
+<body>
+<button id='buttonStart' onclick='addPtcls(10)'>Start Button</button><br/>
+<canvas id="canvasElement" width="800" height="600" style="border:1px solid lightgrey;"></canvas>
+<script>
+  ptcls = [];
+	var canvas = document.getElementById("canvasElement");
+	ctx = canvas.getContext("2d");
+	
+	pause = false;
+	Ptcl = function(){
+		this.x  = 0;
+		this.y  = 0;
+		this.r  = 0;
+		this.dx = 0;
+		this.dy = 0;
+		this.dt = 0.3;
+	}
+	
+	Math.srandom = function(){
+		return Math.random() * 2 - 1;
+	}
+	
+	Ptcl.prototype.init = function(){
+		this.x  = Math.random() * canvas.width;
+		this.y  = Math.random() * canvas.height;
+		this.vx = Math.srandom() * 30 ; 
+		this.vy = Math.srandom() * 30 ;
+		this.r  = Math.random() * 20 + 10 ;
+	}
+	
+	Ptcl.prototype.draw = function() {
+		ctx.fillStyle = "black";
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, this.r, Math.PI * 2, false);
+		ctx.closePath();
+		ctx.fill();
+	}
+	
+	Ptcl.prototype.update = function(){
+		this.interact();
+		this.x += this.vx * this.dt ; 
+		this.y += this.vy * this.dt ; 
+		this.bound();
+		
+	}
+	
+	// Function to add particles to the canvas
+	function addPtcls(n){
+		for( var i = 0; i < n; i++ )
+		{
+			var p = new Ptcl();
+			p.init();
+			ptcls.push(p);
+			
+		}
+	}
+	
+	// Function to clear all the particles from the canvas
+	function clearPtcls(){
+	 	var n = ptcls.length;
+		for( var i = 0; i < n; i++ )
+			ptcls.pop();
+	}
+	
+	// Function that will clear the canvas and update the position and speed of all balls and re-draw them to canvas
+	function loop()
+	{
+		if( pause ) return;	
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		for( var i=0; i < ptcls.length; i++ ) ptcls[i].update();
+		for( var i=0; i < ptcls.length; i++ ) ptcls[i].draw();
+	}
+	
+	var timer = setInterval( loop, 1000 / 60  );
+	
+	Ptcl.prototype.bound = function(){
+		if(this.x < this.r ) { this.x = this.r; this.vx *= -1; }
+		if(this.y < this.r ) { this.y = this.r; this.vy *= -1; }
+		if(this.x > canvas.width - this.r ) { this.x = canvas.width - this.r; this.vx *= -1; }
+		if(this.y > canvas.height - this.r ) { this.y = canvas.height - this.r; this.vy *= -1; }
+	}
+	
+	Ptcl.prototype.interact = function(){
+		for( var i = 0; i < ptcls.length; i++ )
+		{
+			var other = ptcls[i];
+			if( this != other )
+			{
+				var dx = this.x - other.x;
+				var dy = this.y - other.y;
+				var d  = Math.sqrt( dx*dx + dy*dy );
+				if( d > 0 ){
+					var R = this.r + other.r;
+					if( d < R )
+					{
+						var dR = R - d;
+						var ux = dx / d;
+						var uy = dy / d;
+						this.vx += ux * dR * 0.1;
+						this.vy += uy * dR * 0.1;
+						other.vx += -ux * dR * 0.1;
+						other.vy += -uy * dR * 0.1;
+					}
+				}
+			}
+		}
+	}
+	
+	
+	// to add 100 particles to the canvas
+	//addPtcls(100);
+	
+	
+</script>
+
+</body>
+</html>
